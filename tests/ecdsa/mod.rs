@@ -3,16 +3,18 @@
 use ::ecdsa::{
     der,
     elliptic_curve::{
+        array::ArraySize,
         point::PointCompression,
         sec1::{self, FromEncodedPoint, ToEncodedPoint},
         AffinePoint, CurveArithmetic, FieldBytesSize, PrimeCurve,
     },
     signature::{Keypair, Verifier},
+    EcdsaCurve,
 };
 use spki::SubjectPublicKeyInfoOwned;
-use std::{str::FromStr, time::Duration};
+use std::{ops::Add, str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{Builder, CertificateBuilder, Profile},
+    builder::{profile::cabf, Builder, CertificateBuilder},
     name::Name,
     serial_number::SerialNumber,
     time::Validity,
@@ -46,9 +48,10 @@ const TEST_MESSAGE: &[u8] =
 /// Create the signer for this test
 fn create_signer<C>(key_id: object::Id) -> ecdsa::Signer<C>
 where
-    C: CurveAlgorithm + CurveArithmetic + PointCompression + PrimeCurve,
+    C: CurveAlgorithm + CurveArithmetic + PointCompression + PrimeCurve + EcdsaCurve,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
     FieldBytesSize<C>: sec1::ModulusSize,
+    <FieldBytesSize<C> as Add>::Output: ArraySize,
 {
     let client = crate::get_hsm_client();
     create_yubihsm_key(&client, key_id, C::asymmetric_algorithm());
@@ -121,14 +124,15 @@ fn ecdsa_nistp256_ca() {
 
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
-    let profile = Profile::Root;
     let subject =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
-    let pub_key = SubjectPublicKeyInfoOwned::from_key(signer.verifying_key()).unwrap();
+    let pub_key = SubjectPublicKeyInfoOwned::from_key(&signer.verifying_key()).unwrap();
+    let profile = cabf::Root::new(false, subject).unwrap();
 
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
+        .expect("Create certificate");
 
-    builder.build::<der::Signature<NistP256>>().unwrap();
+    builder
+        .build::<_, der::Signature<NistP256>>(&signer)
+        .unwrap();
 }
