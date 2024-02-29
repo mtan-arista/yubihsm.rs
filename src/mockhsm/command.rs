@@ -24,15 +24,11 @@ use crate::{
     wrap::{self, commands::*},
     Capability,
 };
-use ::ecdsa::{
-    elliptic_curve::{bigint::U256, generic_array::GenericArray, ops::Reduce, Field},
-    hazmat::SignPrimitive,
-};
 use ::hmac::{Hmac, Mac};
 use ::rsa::{pkcs1v15, pss, RsaPrivateKey};
 use digest::{
     const_oid::AssociatedOid, crypto_common::OutputSizeUser, typenum::Unsigned, Digest,
-    FixedOutputReset,
+    FixedOutputReset, KeyInit,
 };
 use rand_core::{OsRng, RngCore};
 use sha1::Sha1;
@@ -638,28 +634,18 @@ fn sign_ecdsa(state: &State, cmd_data: &[u8]) -> response::Message {
     {
         match &obj.payload {
             Payload::EcdsaNistP256(secret_key) => {
-                let k = p256::Scalar::random(&mut OsRng);
-                let z = p256::Scalar::reduce_bytes(GenericArray::from_slice(&command.digest))
-                    .to_bytes();
-                let signature = secret_key
-                    .to_nonzero_scalar()
-                    .try_sign_prehashed(k, &z)
-                    .expect("ECDSA failure!")
-                    .0;
+                let signing_key = p256::ecdsa::SigningKey::from(secret_key);
+                let signature: p256::ecdsa::Signature = signing_key
+                    .sign_prehash(&command.digest)
+                    .expect("ECDSA failure!");
 
                 SignEcdsaResponse(signature.to_der().as_ref().into()).serialize()
             }
             Payload::EcdsaSecp256k1(secret_key) => {
-                let k = k256::Scalar::random(&mut OsRng);
-                let z = <k256::Scalar as Reduce<U256>>::reduce_bytes(GenericArray::from_slice(
-                    &command.digest,
-                ))
-                .to_bytes();
-                let signature = secret_key
-                    .to_nonzero_scalar()
-                    .try_sign_prehashed(k, &z)
-                    .expect("ECDSA failure!")
-                    .0;
+                let signing_key = k256::ecdsa::SigningKey::from(secret_key);
+                let signature: k256::ecdsa::Signature = signing_key
+                    .sign_prehash(&command.digest)
+                    .expect("ECDSA failure!");
 
                 SignEcdsaResponse(signature.to_der().as_ref().into()).serialize()
             }
