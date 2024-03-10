@@ -1121,9 +1121,10 @@ dependencies = [
 [[package]]
 name = "yubikey"
 version = "0.8.0"
-source = "git+https://github.com/baloo/yubikey.rs?branch=baloo/yubihsm-auth#9284ab5724ff3c28ce8fe3c6deceb9ab7aeea567"
+source = "git+https://github.com/baloo/yubikey.rs?branch=baloo/yubihsm-auth_delayed-signer#fedee0a722f4f81002cd9ccb8200b67abdd7708a"
 dependencies = [
  "base16ct",
+ "bitflags 2.4.2",
  "der",
  "des",
  "ecdsa",
