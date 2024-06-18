@@ -665,6 +665,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "p521"
+version = "0.14.0-pre"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#82e1b11fba2b01a6e60add989ab50af5cad14d5f"
+dependencies = [
+ "base16ct",
+ "ecdsa",
+ "elliptic-curve",
+ "primefield",
+ "primeorder",
+ "sha2",
+]
+
+[[package]]
 name = "pbkdf2"
 version = "0.13.0-pre.0"
 source = "git+https://github.com/RustCrypto/password-hashes.git?branch=master#e54197e777543acd8565b820d544ae6ddc2344e8"
@@ -737,6 +750,11 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
+
+[[package]]
+name = "primefield"
+version = "0.14.0-pre"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#82e1b11fba2b01a6e60add989ab50af5cad14d5f"
 
 [[package]]
 name = "primeorder"
@@ -1150,6 +1168,7 @@ dependencies = [
  "once_cell",
  "p256",
  "p384",
+ "p521",
  "pbkdf2",
  "rand_core",
  "rsa",
