@@ -666,6 +666,23 @@ fn sign_ecdsa(state: &State, cmd_data: &[u8]) -> response::Message {
 
                 SignEcdsaResponse(signature.to_der().as_ref().into()).serialize()
             }
+
+            Payload::EcdsaNistP384(secret_key) => {
+                let signing_key = p384::ecdsa::SigningKey::from(secret_key);
+                let signature: p384::ecdsa::Signature = signing_key
+                    .sign_prehash(&command.digest)
+                    .expect("ECDSA failure!");
+
+                SignEcdsaResponse(signature.to_der().as_ref().into()).serialize()
+            }
+            Payload::EcdsaNistP521(secret_key) => {
+                let signing_key = p521::ecdsa::SigningKey::from(secret_key);
+                let signature: p521::ecdsa::Signature = signing_key
+                    .sign_prehash(&command.digest)
+                    .expect("ECDSA failure!");
+
+                SignEcdsaResponse(signature.to_der().as_ref().into()).serialize()
+            }
             _ => {
                 debug!("not an ECDSA key: {:?}", obj.algorithm());
                 device::ErrorKind::InvalidCommand.into()
@@ -931,6 +948,12 @@ fn sign_attestation_certificate(state: &State, cmd_data: &[u8]) -> response::Mes
             Payload::EcdsaNistP256(secret_key) => {
                 SubjectPublicKeyInfoOwned::from_key(&secret_key.public_key()).unwrap()
             }
+            Payload::EcdsaNistP384(secret_key) => {
+                SubjectPublicKeyInfoOwned::from_key(&secret_key.public_key()).unwrap()
+            }
+            Payload::EcdsaNistP521(secret_key) => {
+                SubjectPublicKeyInfoOwned::from_key(&secret_key.public_key()).unwrap()
+            }
             _ => todo!(),
         };
 
@@ -966,6 +989,18 @@ fn sign_attestation_certificate(state: &State, cmd_data: &[u8]) -> response::Mes
                 let signer = p256::ecdsa::SigningKey::from(secret_key);
                 builder
                     .build::<_, p256::ecdsa::DerSignature>(&signer)
+                    .unwrap()
+            }
+            Some(Payload::EcdsaNistP384(secret_key)) => {
+                let signer = p384::ecdsa::SigningKey::from(secret_key);
+                builder
+                    .build::<_, p384::ecdsa::DerSignature>(&signer)
+                    .unwrap()
+            }
+            Some(Payload::EcdsaNistP521(secret_key)) => {
+                let signer = p521::ecdsa::SigningKey::from(secret_key);
+                builder
+                    .build::<_, p521::ecdsa::DerSignature>(&signer)
                     .unwrap()
             }
             _ => todo!(),

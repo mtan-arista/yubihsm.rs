@@ -61,12 +61,14 @@ hex-literal = "0.4"
 once_cell = "1"
 rsa = { version = "=0.10.0-pre.1", features = ["sha1", "sha2"] }
 p256 = { version = "=0.14.0-pre.0", features = ["ecdsa"] }
+p384 = { version = "=0.14.0-pre", features = ["ecdsa"] }
+p521 = { version = "=0.14.0-pre", features = ["ecdsa"] }
 
 [features]
 default = ["http", "passwords", "setup"]
 http-server = ["tiny_http"]
 http = []
-mockhsm = ["ecdsa/arithmetic", "ed25519-dalek", "p256/ecdsa", "secp256k1"]
+mockhsm = ["ecdsa/arithmetic", "ed25519-dalek", "p256/ecdsa", "secp256k1", "p384/ecdsa", "p521/pkcs8"]
 passwords = ["hmac", "pbkdf2"]
 secp256k1 = ["k256"]
 setup = ["passwords", "serde_json", "uuid/serde"]
