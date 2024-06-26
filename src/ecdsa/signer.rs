@@ -2,13 +2,12 @@
 //!
 //! To enable secp256k1 support, build with the `secp256k1` cargo feature enabled.
 
-use super::{algorithm::CurveAlgorithm, NistP256, NistP384};
+use super::{algorithm::CurveAlgorithm, NistP256, NistP384, NistP521};
 use crate::{object, Client};
 use ecdsa::{
     der,
     elliptic_curve::{
         array::ArraySize,
-        consts::{U32, U48},
         point::PointCompression,
         sec1::{self, FromEncodedPoint, ToEncodedPoint},
         AffinePoint, CurveArithmetic, FieldBytesSize,
@@ -128,39 +127,32 @@ where
     type VerifyingKey = VerifyingKey<C>;
 }
 
-impl PrehashSigner<Signature<NistP256>> for Signer<NistP256> {
-    /// Compute a fixed-size P-256 ECDSA signature of a digest output.
-    fn sign_prehash(&self, prehash: &[u8]) -> Result<Signature<NistP256>, Error> {
-        self.sign_prehash_ecdsa(prehash)
-    }
+macro_rules! impl_signer {
+    ($curve:ty) => {
+        impl PrehashSigner<Signature<$curve>> for Signer<$curve> {
+            /// Compute a fixed-size ECDSA signature of a digest output.
+            fn sign_prehash(&self, prehash: &[u8]) -> Result<Signature<$curve>, Error> {
+                self.sign_prehash_ecdsa(prehash)
+            }
+        }
+
+        impl DigestSigner<<$curve as DigestPrimitive>::Digest, Signature<$curve>>
+            for Signer<$curve>
+        {
+            /// Compute a fixed-sized ECDSA signature of the given digest
+            fn try_sign_digest(
+                &self,
+                digest: <$curve as DigestPrimitive>::Digest,
+            ) -> Result<Signature<$curve>, Error> {
+                self.sign_prehash(&digest.finalize())
+            }
+        }
+    };
 }
 
-impl<D> DigestSigner<D, Signature<NistP256>> for Signer<NistP256>
-where
-    D: Digest<OutputSize = U32> + Default,
-{
-    /// Compute a fixed-sized P-256 ECDSA signature of the given digest
-    fn try_sign_digest(&self, digest: D) -> Result<Signature<NistP256>, Error> {
-        self.sign_prehash(&digest.finalize())
-    }
-}
-
-impl PrehashSigner<Signature<NistP384>> for Signer<NistP384> {
-    /// Compute a fixed-size P-384 ECDSA signature of a digest output.
-    fn sign_prehash(&self, prehash: &[u8]) -> Result<Signature<NistP384>, Error> {
-        self.sign_prehash_ecdsa(prehash)
-    }
-}
-
-impl<D> DigestSigner<D, Signature<NistP384>> for Signer<NistP384>
-where
-    D: Digest<OutputSize = U48> + Default,
-{
-    /// Compute a fixed-sized P-384 ECDSA signature of the given digest
-    fn try_sign_digest(&self, digest: D) -> Result<Signature<NistP384>, Error> {
-        self.sign_prehash(&digest.finalize())
-    }
-}
+impl_signer!(NistP256);
+impl_signer!(NistP384);
+impl_signer!(NistP521);
 
 #[cfg(feature = "secp256k1")]
 impl PrehashSigner<Signature<Secp256k1>> for Signer<Secp256k1> {
@@ -185,24 +177,28 @@ impl PrehashSigner<(Signature<Secp256k1>, RecoveryId)> for Signer<Secp256k1> {
 }
 
 #[cfg(feature = "secp256k1")]
-impl<D> DigestSigner<D, Signature<Secp256k1>> for Signer<Secp256k1>
-where
-    D: Digest<OutputSize = U32> + Default,
+impl DigestSigner<<Secp256k1 as DigestPrimitive>::Digest, Signature<Secp256k1>>
+    for Signer<Secp256k1>
 {
     /// Compute a fixed-size secp256k1 ECDSA signature of the given digest
-    fn try_sign_digest(&self, digest: D) -> Result<Signature<Secp256k1>, Error> {
+    fn try_sign_digest(
+        &self,
+        digest: <Secp256k1 as DigestPrimitive>::Digest,
+    ) -> Result<Signature<Secp256k1>, Error> {
         self.sign_prehash(&digest.finalize())
     }
 }
 
 #[cfg(feature = "secp256k1")]
-impl<D> DigestSigner<D, (Signature<Secp256k1>, RecoveryId)> for Signer<Secp256k1>
-where
-    D: Digest<OutputSize = U32> + Default,
+impl DigestSigner<<Secp256k1 as DigestPrimitive>::Digest, (Signature<Secp256k1>, RecoveryId)>
+    for Signer<Secp256k1>
 {
     /// Compute a fixed-size secp256k1 ECDSA signature of the given digest along with the recovery
     /// ID.
-    fn try_sign_digest(&self, digest: D) -> Result<(Signature<Secp256k1>, RecoveryId), Error> {
+    fn try_sign_digest(
+        &self,
+        digest: <Secp256k1 as DigestPrimitive>::Digest,
+    ) -> Result<(Signature<Secp256k1>, RecoveryId), Error> {
         self.sign_prehash(&digest.finalize())
     }
 }
