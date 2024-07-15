@@ -3,8 +3,9 @@
 use crate::{asymmetric, ecdsa::algorithm::CurveAlgorithm, ed25519};
 use ::ecdsa::{
     elliptic_curve::{
-        array::Array, bigint::Bounded, point::PointCompression, sec1, CurveArithmetic,
-        FieldBytesSize,
+        array::{typenum::Unsigned, Array},
+        point::PointCompression,
+        sec1, CurveArithmetic, FieldBytesSize,
     },
     EcdsaCurve,
 };
@@ -56,7 +57,9 @@ impl PublicKey {
         C: EcdsaCurve + CurveArithmetic + CurveAlgorithm + PointCompression,
         FieldBytesSize<C>: sec1::ModulusSize,
     {
-        if self.algorithm != C::asymmetric_algorithm() || self.bytes.len() != C::Uint::BYTES * 2 {
+        if self.algorithm != C::asymmetric_algorithm()
+            || self.bytes.len() != C::FieldBytesSize::USIZE * 2
+        {
             return None;
         }
 

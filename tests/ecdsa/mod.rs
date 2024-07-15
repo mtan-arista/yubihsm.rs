@@ -21,7 +21,7 @@ use x509_cert::{
 };
 use yubihsm::{
     asymmetric::signature::Signer as _,
-    ecdsa::{self, algorithm::CurveAlgorithm, NistP256, NistP384},
+    ecdsa::{self, algorithm::CurveAlgorithm, NistP256, NistP384, NistP521},
     object, Client,
 };
 
@@ -154,4 +154,13 @@ fn ecdsa_nistp384_ca() {
     builder
         .build::<_, der::Signature<NistP384>>(&signer)
         .unwrap();
+}
+
+#[test]
+fn ecdsa_nistp521_sign_test() {
+    let signer = create_signer::<NistP521>(206);
+    let verify_key = p521::ecdsa::VerifyingKey::from_encoded_point(signer.public_key()).unwrap();
+
+    let signature: ecdsa::Signature<NistP521> = signer.sign(TEST_MESSAGE);
+    assert!(verify_key.verify(TEST_MESSAGE, &signature).is_ok());
 }
