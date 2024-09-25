@@ -24,7 +24,7 @@ use std::{
     str::FromStr,
 };
 use x509_cert::{
-    builder::{self, profile::Profile, Builder, CertificateBuilder},
+    builder::{self, profile::BuilderProfile, Builder, CertificateBuilder},
     ext::Extension,
     name::Name,
     serial_number,
@@ -420,7 +420,7 @@ impl Objects {
 
     fn generate_self_signed_cert(secret_key: &p256::SecretKey) -> Certificate {
         struct SelfSigned;
-        impl Profile for SelfSigned {
+        impl BuilderProfile for SelfSigned {
             fn get_issuer(&self, subject: &Name) -> Name {
                 subject.clone()
             }
@@ -438,16 +438,16 @@ impl Objects {
         }
 
         let serial_number = serial_number::SerialNumber::generate(&mut OsRng).unwrap();
-        let validity = Validity {
+        let validity = Validity::new(
             // Yubico's Cert uses UTCTime for the not_before and GeneralizedTime for the not_after
             // (scheduled for 2071)
-            not_before: Time::UtcTime(
+            Time::UtcTime(
                 UtcTime::from_date_time(DateTime::new(2017, 1, 1, 0, 0, 0).unwrap()).unwrap(),
             ),
-            not_after: Time::GeneralTime(GeneralizedTime::from_date_time(
+            Time::GeneralTime(GeneralizedTime::from_date_time(
                 DateTime::new(2071, 10, 5, 0, 0, 0).unwrap(),
             )),
-        };
+        );
         let pub_key = SubjectPublicKeyInfoOwned::from_key(&secret_key.public_key()).unwrap();
 
         let builder = CertificateBuilder::new(SelfSigned, serial_number, validity, pub_key)

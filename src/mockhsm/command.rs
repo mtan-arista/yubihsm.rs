@@ -44,14 +44,14 @@ use signature::{
     Signer,
 };
 use spki::{der::Encode, SubjectPublicKeyInfoOwned, SubjectPublicKeyInfoRef};
-use std::{io::Cursor, str::FromStr, time::SystemTime};
+use std::{io::Cursor, str::FromStr};
 use subtle::ConstantTimeEq;
 use x509_cert::{
     builder::{self, profile, Builder, CertificateBuilder},
     ext::{AsExtension, Extension},
     name::Name,
     serial_number,
-    time::{Time, Validity},
+    time::Validity,
     TbsCertificate,
 };
 
@@ -974,7 +974,7 @@ struct AttestationProfile {
     target: object::Info,
 }
 
-impl profile::Profile for AttestationProfile {
+impl profile::BuilderProfile for AttestationProfile {
     fn get_issuer(&self, subject: &Name) -> Name {
         subject.clone()
     }
@@ -997,35 +997,36 @@ impl profile::Profile for AttestationProfile {
         extensions.push(
             attestation::FirmwareVersion::try_from(&self.device)
                 .unwrap()
-                .to_extension(&tbs.subject, &extensions)?,
+                .to_extension(&tbs.subject(), &extensions)?,
         );
-        extensions
-            .push(attestation::Serial::from(&self.device).to_extension(&tbs.subject, &extensions)?);
+        extensions.push(
+            attestation::Serial::from(&self.device).to_extension(&tbs.subject(), &extensions)?,
+        );
         extensions.push(
             attestation::Origin::try_from(self.target.origin)
                 .unwrap()
-                .to_extension(&tbs.subject, &extensions)?,
+                .to_extension(&tbs.subject(), &extensions)?,
         );
         extensions.push(
             attestation::Domain::try_from(self.target.domains)
                 .unwrap()
-                .to_extension(&tbs.subject, &extensions)?,
+                .to_extension(&tbs.subject(), &extensions)?,
         );
         extensions.push(
             attestation::Capability::try_from(self.target.capabilities)
                 .unwrap()
-                .to_extension(&tbs.subject, &extensions)?,
+                .to_extension(&tbs.subject(), &extensions)?,
         );
         extensions.push(
             attestation::ObjectId {
                 id: self.target.object_id,
             }
-            .to_extension(&tbs.subject, &extensions)?,
+            .to_extension(&tbs.subject(), &extensions)?,
         );
         extensions.push(
             attestation::Label::try_from(&self.target.label)
                 .unwrap()
-                .to_extension(&tbs.subject, &extensions)?,
+                .to_extension(&tbs.subject(), &extensions)?,
         );
 
         Ok(extensions)
@@ -1041,11 +1042,7 @@ fn sign_attestation_certificate(state: &State, cmd_data: &[u8]) -> response::Mes
         .get(command.key_id, object::Type::AsymmetricKey)
     {
         let serial_number = serial_number::SerialNumber::generate(&mut OsRng).unwrap();
-        let now = SystemTime::now();
-        let validity = Validity {
-            not_before: Time::try_from(now).unwrap(),
-            not_after: Time::INFINITY,
-        };
+        let validity = Validity::infinity().unwrap();
         let pub_key = match &target.payload {
             Payload::RsaKey(private_key) => {
                 SubjectPublicKeyInfoOwned::from_key(&private_key.to_public_key()).unwrap()

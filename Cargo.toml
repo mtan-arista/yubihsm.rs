@@ -17,23 +17,23 @@ edition = "2021"
 rust-version = "1.70"
 
 [dependencies]
-aes = { version = "=0.9.0-pre.1", features = ["zeroize"] }
+aes = { version = "=0.9.0-pre.2", features = ["zeroize"] }
 bitflags = "2"
-cmac = "=0.8.0-pre.1"
-cbc = "=0.2.0-pre.1"
+cmac = "=0.8.0-pre.2"
+cbc = "=0.2.0-pre.2"
 ccm = { version = "0.5", features = ["std"] }
 der = { version = "0.8.0-pre.0" }
 digest = { version = "=0.11.0-pre.9", default-features = false }
-ecdsa = { version = "=0.17.0-pre.7", default-features = false, features = ["pkcs8"] }
+ecdsa = { version = "=0.17.0-pre.9", default-features = false, features = ["pkcs8"] }
 ed25519 = "=2.3.0-pre.0"
 log = "0.4"
 num-traits = "0.2"
-p256 = { version = "=0.14.0-pre.1", default-features = false, features = ["ecdsa"] }
-p384 = { version = "=0.14.0-pre.1", default-features = false, features = ["ecdsa"] }
-p521 = { version = "=0.14.0-pre.1", default-features = false, features = ["ecdsa"] }
+p256 = { version = "=0.14.0-pre.2", default-features = false, features = ["ecdsa"] }
+p384 = { version = "=0.14.0-pre.2", default-features = false, features = ["ecdsa"] }
+p521 = { version = "=0.14.0-pre.2", default-features = false, features = ["ecdsa"] }
 serde = { version = "1", features = ["serde_derive"] }
 rand_core = { version = "0.6", features = ["std"] }
-rsa = "=0.10.0-pre.2"
+rsa = "=0.10.0-pre.3"
 signature = { version = "=2.3.0-pre.4", features = ["derive"] }
 sha1 = { version = "=0.11.0-pre.4", features = ["oid"] }
 sha2 = { version = "=0.11.0-pre.4", features = ["oid"] }
@@ -42,13 +42,13 @@ subtle = "2"
 thiserror = "1"
 time = { version = "0.3", features = ["serde"] }
 uuid = { version = "1", default-features = false }
-x509-cert = { version = "=0.3.0-pre", features = ["builder"] }
+x509-cert = { version = "=0.3.0-pre.0", features = ["builder"] }
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 # optional dependencies
 ed25519-dalek = { version = "=2.2.0-pre", optional = true, features = ["rand_core"] }
 hmac = { version = "=0.13.0-pre.4", optional = true }
-k256 = { version = "=0.14.0-pre.0", optional = true, features = ["ecdsa", "sha256"] }
+k256 = { version = "=0.14.0-pre.2", optional = true, features = ["ecdsa", "sha256"] }
 pbkdf2 = { version = "=0.13.0-pre.1", optional = true, default-features = false, features = ["hmac"] }
 serde_json = { version = "1", optional = true }
 rusb = { version = "0.9.4", optional = true }
@@ -59,10 +59,10 @@ yubikey = { version = "0.8.0", optional = true }
 ed25519-dalek = "=2.2.0-pre"
 hex-literal = "0.4"
 once_cell = "1"
-rsa = { version = "=0.10.0-pre.2", features = ["sha1", "sha2"] }
-p256 = { version = "=0.14.0-pre.1", features = ["ecdsa"] }
-p384 = { version = "=0.14.0-pre.1", features = ["ecdsa"] }
-p521 = { version = "=0.14.0-pre.1", features = ["ecdsa"] }
+rsa = { version = "=0.10.0-pre.3", features = ["sha1", "sha2"] }
+p256 = { version = "=0.14.0-pre.2", features = ["ecdsa"] }
+p384 = { version = "=0.14.0-pre.2", features = ["ecdsa"] }
+p521 = { version = "=0.14.0-pre.2", features = ["ecdsa"] }
 
 [features]
 default = ["http", "passwords", "setup"]
@@ -86,14 +86,10 @@ required-features = ["http-server", "usb"]
 
 [patch.crates-io]
 
-x509-cert  = { git = "https://github.com/RustCrypto/formats.git" }
-
 ccm = { git = "https://github.com/RustCrypto/AEADs.git" }
-
-k256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
 
 # https://github.com/dalek-cryptography/curve25519-dalek/pull/676
 curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek.git", branch = "rustcrypto-new-releases" }
 ed25519-dalek    = { git = "https://github.com/dalek-cryptography/curve25519-dalek.git", branch = "rustcrypto-new-releases" }
 
-yubikey = { git = "https://github.com/baloo/yubikey.rs", branch = "baloo/rustcrypto-pre-releases_yubihsm-auth-2024-07-30" }
+yubikey = { git = "https://github.com/baloo/yubikey.rs", branch = "baloo/rustcrypto-pre-releases_yubihsm-auth-2024-09-24" }
