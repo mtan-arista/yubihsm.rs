@@ -1083,13 +1083,6 @@ impl Client {
         key_id: object::Id,
         data: &[u8],
     ) -> Result<rsa::pss::Signature, Error> {
-        ensure!(
-            data.len() < rsa::pss::MAX_MESSAGE_SIZE,
-            ErrorKind::ProtocolError,
-            "message too large to be signed (max: {})",
-            rsa::pss::MAX_MESSAGE_SIZE
-        );
-
         let mut hasher = S::new();
         hasher.update(data);
         let digest = hasher.finalize();
